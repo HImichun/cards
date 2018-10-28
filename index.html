@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+	<div id="game">
+		<table>
+			<tr>
+				<td>
+					<div class="stack" open="false" can-drag="false" can-drop="false" id="deck"></div>
+				</td>
+				<td>
+					<div class="stack" open="true" can-drag="true"  can-drop="dropDraw" id="draw"></div>
+				</td>
+				<td></td>
+				<td></td>
+				<td>
+					<div class="stack" can-drag="false" can-drop="dropGoal"></div>
+				</td>
+				<td>
+					<div class="stack" can-drag="false" can-drop="dropGoal"></div>
+				</td>
+				<td>
+					<div class="stack" can-drag="false" can-drop="dropGoal"></div>
+				</td>
+				<td>
+					<div class="stack" can-drag="false" can-drop="dropGoal"></div>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>
+					<div class="stack offset" manual-open="true" can-drag="dragCol" can-drop="dropCol"></div>
+				</td>
+				<td>
+					<div class="stack offset" manual-open="true" can-drag="dragCol" can-drop="dropCol"></div>
+				</td>
+				<td>
+					<div class="stack offset" manual-open="true" can-drag="dragCol" can-drop="dropCol"></div>
+				</td>
+				<td>
+					<div class="stack offset" manual-open="true" can-drag="dragCol" can-drop="dropCol"></div>
+				</td>
+				<td>
+					<div class="stack offset" manual-open="true" can-drag="dragCol" can-drop="dropCol"></div>
+				</td>
+				<td>
+					<div class="stack offset" manual-open="true" can-drag="dragCol" can-drop="dropCol"></div>
+				</td>
+				<td>
+					<div class="stack offset" manual-open="true" can-drag="dragCol" can-drop="dropCol"></div>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+<script type="text/javascript" src="klondike.js"></script>
+</body>
+</html>

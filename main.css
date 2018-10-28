@@ -1,0 +1,87 @@
+*{
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+#game{
+	--w: calc(100vw / 9);
+	--h: calc(var(--w)*1.7);
+	
+	--f: ;
+	
+	--8: calc(var(--w) / 10);
+	--4: calc(var(--w) / 20);
+	--2: calc(var(--w) / 40);
+	
+	width: calc(var(--w)*9);
+	margin: 0 auto;
+}
+@media (min-width: 700px){
+	#game{
+		--w: 77.7667px;
+	}
+}
+
+#game table{
+	border-collapse: collapse;
+}
+#game td{
+	padding: var(--8) var(--4);
+}
+
+.stack{
+	position: relative;
+	width: var(--w);
+	height: var(--h);
+	
+	border: 1px dotted black;
+	border-radius: var(--8);
+}
+
+.card{
+	display: none;
+	position: relative;
+	width: var(--w);
+	top: -1px;
+	left: -1px;
+	
+  font-size: var(--f);
+	
+	background: white;
+	border: 1px solid black;
+	cursor: default;
+}
+.offset .card{
+	display: block;
+	height: calc(var(--w)*.4);
+	margin-bottom: calc(-1 * var(--8));
+	border-radius: var(--8) var(--8) 0 0;
+}
+.card:last-child{
+	display: block;
+	height: var(--h);
+	border-radius: var(--8);
+}
+
+.card.red{
+	color: red;
+}
+.card.hidden{
+	background: #AAA;
+}
+.card.drag{
+	box-shadow: var(--2) var(--2) var(--4) #0006;
+}
+
+
+
+
+
+
+
+
+
+
+
+
