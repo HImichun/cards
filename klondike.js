@@ -49,8 +49,7 @@ class Card
 			this.el.classList.remove("drag")
 		}
 		this.el.onmousedown = e => {
-			if(!this.open){
-				if(e.which != 1 || !this.stack.manualOpen) return;
+			if(!this.open && e.which == 1 && this.stack.manualOpen && this.stack.topCard == this){
 				e.preventDefault()
 				this.open = true
 				this.stack.render()
