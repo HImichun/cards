@@ -1,3 +1,5 @@
+//@ts-check
+
 function randInt(min,max){
 	return Math.floor(Math.random() * (max - min) + min)
 }
@@ -10,7 +12,7 @@ class Card
 		this.number = number
 		this.open = true
 
-		if(suit == "h" || suit == "d")
+		if(suit == "♥" || suit == "♦")
 			this.color = "red"
 		else
 			this.color = "black"
@@ -153,7 +155,7 @@ class Stack
 		for(const card of this.cards){
 			if(card.open){
 				card.el.classList.remove("hidden")
-				card.el.innerText = card.name + " : " + card.suit
+				card.el.innerText = card.name + " " + card.suit
 			}
 			else{
 				card.el.classList.add("hidden")
@@ -190,39 +192,34 @@ class Stack
 			return true
 		return false
 	}
-	static dropDraw(holdings){
-		return holdings[0].stack == this.game.stacks.deck
-	}
 }
 
 class Klondike
 {
 	constructor(){
-		/** @type {[Card]} */
-		this.cards = []
-		this.makeCards()
-
-		/** @type {[Stack]} */
-		this.stacks = {}
-		this.makeStacks()
-
+		this.cards = this.makeCards()
+		this.stacks = this.makeStacks()
 		this.start()
 	}
 
 	makeCards(){
+		const cards = []
 		let i = 0
-		for(const suit of ["h","d","c","s"])
+		for(const suit of ["♥","♦","♣","♠"])
 			for(let number = 1; number <= 13; number++)
-				this.cards.push(new Card(i++, suit, number))
+				cards.push(new Card(i++, suit, number))
+		return cards
 	}
 
 	makeStacks(){
+		const stacks = {}
 		document.querySelectorAll(".stack").forEach((el,index) => {
 			const stack = new Stack(this, el)
-			this.stacks[index] = stack
+			stacks[index] = stack
 			if(el.id)
-				this.stacks[el.id] = stack
+				stacks[el.id] = stack
 		})
+		return stacks
 	}
 
 	start(){
@@ -253,10 +250,10 @@ class Klondike
 
 	render(){
 		for(const key of Object.keys(this.stacks))
-			if(isNaN(key))
-				continue
-			else
+			if(Number(key))
 				this.stacks[key].render()
+			else
+				continue
 	}
 }
 
