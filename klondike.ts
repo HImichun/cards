@@ -1,9 +1,3 @@
-//@ts-check
-
-function randInt(min,max){
-	return Math.floor(Math.random() * (max - min) + min)
-}
-
 class Card
 {
 	isOpen : boolean
@@ -198,7 +192,7 @@ class Stack
 	shuffle(){
 		for(let i = 0; i < this.cards.length; i++){
 			const buffer = this.cards[i]
-			const otherI = randInt(i, this.cards.length)
+			const otherI = Klondike.randInt(i, this.cards.length)
 
 			this.cards[i] = this.cards[otherI]
 			this.cards[otherI] = buffer
@@ -339,6 +333,11 @@ class Klondike
 				this.stacks[key].render()
 			else
 				continue
+	}
+
+
+	static randInt(min,max){
+		return Math.floor(Math.random() * (max - min) + min)
 	}
 }
 

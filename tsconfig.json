@@ -1,6 +1,12 @@
 {
+	"compileOnSave": true,
 	"compilerOptions": {
-		"target": "es5"
+	  // "module":"system",
+	  "target": "es5",
+	  "sourceMap": false,
+	  "outFile": "./klondike.js"
 	},
-	"files": ["klondike.ts"]
-}
+	"files":[
+	  "./klondike.ts"
+	]
+  }

@@ -1,7 +1,3 @@
-//@ts-check
-function randInt(min, max) {
-    return Math.floor(Math.random() * (max - min) + min);
-}
 var Card = /** @class */ (function () {
     function Card(game, id, suit, number) {
         var _this = this;
@@ -179,7 +175,7 @@ var Stack = /** @class */ (function () {
     Stack.prototype.shuffle = function () {
         for (var i = 0; i < this.cards.length; i++) {
             var buffer = this.cards[i];
-            var otherI = randInt(i, this.cards.length);
+            var otherI = Klondike.randInt(i, this.cards.length);
             this.cards[i] = this.cards[otherI];
             this.cards[otherI] = buffer;
         }
@@ -301,6 +297,9 @@ var Klondike = /** @class */ (function () {
             else
                 continue;
         }
+    };
+    Klondike.randInt = function (min, max) {
+        return Math.floor(Math.random() * (max - min) + min);
     };
     return Klondike;
 }());
