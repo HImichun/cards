@@ -38,6 +38,10 @@
 	
 	border: 1px dashed #AAA;
 	border-radius: var(--8);
+	transition: filter .15s ease;
+}
+.stack.can-drop{
+	filter: drop-shadow(0 0 var(--4) #0F08);
 }
 
 .card{
@@ -52,7 +56,11 @@
 	
 	background: white;
 	border: 1px solid black;
+	box-shadow: 0 0 var(--4) #0003;
 	cursor: default;
+	transition: box-shadow .15s ease, 
+    transform .15s ease,
+		margin-bottom .15s ease;
 }
 .offset .card{
 	display: block;
@@ -73,10 +81,13 @@
 	background: #AAA;
 }
 .card.drag{
-	box-shadow: var(--2) var(--2) var(--4) #0006;
+	box-shadow: 0 2px var(--8) #0004;
+	transform: scale(1.05) translateY(-2px);
 }
 
-
+.stack[can-drag="false"] .card{
+	box-shadow: 0 0 var(--8) #0002 inset;
+}
 
 
 
