@@ -97,7 +97,30 @@
 }
 
 
-
+#rewind{
+	position: absolute;
+	display: block;
+	bottom:8px;
+	left: 8px;
+	height: 60px;
+	width: 60px;
+	
+	font-size: 20px;
+	
+	background: white;
+	border: 1px solid black;
+	border-radius: 50%;
+	box-shadow: 0 0 var(--4) #0003;
+	transition: .15s ease;
+}
+#rewind:hover{
+	box-shadow: 0 2px var(--8) #0004;
+	transform: scale(1.05) translateY(-2px);
+}
+#rewind:active{
+	box-shadow: 0 0 var(--8) #0002 inset;
+	transform: scale(.95) translateY(2px);
+}
 
 
 

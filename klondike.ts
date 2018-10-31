@@ -35,43 +35,22 @@ class Card
 		this.el.setAttribute("draggable", "true")
 		this.el.ondragstart = e => {
 			e.stopPropagation()
-			const canDrag = this.stack.canDrag(this)
-			if(!canDrag) return;
-
-			const cardsInStack = this.stack.cards
-			const cards = []
-			const cardIds = []
-			for(let i = cardsInStack.indexOf(this); i < cardsInStack.length; i++){
-				const card = cardsInStack[i]
-				cards.push(card)
-				cardIds.push(card.id)
-				card.el.classList.add("drag")
-			}
-
-			for(const key of Object.keys(this.game.stacks)){
-				if(isNaN(Number(key))) continue;
-				const stack = this.game.stacks[key]
-				const canDrop = stack.canDrop(cards, stack.topCard)
-				if(canDrop)
-					stack.el.classList.add("can-drop")
-			}
-
-			e.dataTransfer.setData("text", cardIds.join(","));
+			this.game.take(this)
+			e.dataTransfer.setData("text", "help");
 		}
-		this.el.ondragend = e => {
-			this.el.classList.remove("drag")
-
-			for(const key of Object.keys(this.game.stacks)){
-				if(isNaN(Number(key))) continue;
-				const stack = this.game.stacks[key]
-				stack.el.classList.remove("can-drop")
-			}
-		}
-		this.el.onmousedown = e => {
-			if(!this.isOpen && e.which == 1 && this.stack.manualOpen && this.stack.topCard == this){
-				e.preventDefault()
+		this.el.ondragend = e => this.game.clearHolding()
+		this.el.onclick = e => {
+			e.preventDefault()
+			
+			if(!this.isOpen && this.stack.manualOpen && this.stack.topCard == this){
 				this.open()
 				this.stack.render()
+				return
+			}
+			if(this.isOpen){
+				e.stopPropagation()
+				if(this.game.holding.length == 0 ||!this.stack.put(this.game.holding))
+					this.game.take(this)
 			}
 		}
 	}
@@ -129,16 +108,27 @@ class Stack
 		}
 		this.el.ondrop = e => {
 			e.preventDefault()
-			const cardIds = e.dataTransfer.getData("text").split(",")
-			const cards = cardIds.map(id => this.game.cards[id])
-
-			const canDrop = this.canDrop(cards, this.topCard)
-			
-			for(const card of cards)
-				card.el.classList.remove("drag")
-			if(canDrop)
-				this.addMany(cards)
+			const cards = this.game.holding
+			this.put(cards)
 		}
+		this.el.onclick = e => {
+			e.preventDefault()
+			if(this.game.holding.length == 0) return
+			const cards = this.game.holding
+			this.put(cards)
+		}
+	}
+
+	put(cards){
+		this.game.clearHolding()
+
+		const canDrop = this.canDrop(cards, this.topCard)
+		
+		if(canDrop){
+			this.addMany(cards)
+			return true
+		}
+		return false
 	}
 
 	setDragDrop(){
@@ -218,25 +208,25 @@ class Stack
 		return card.isOpen
 	}
 
-	static dropGoal(holdings, topStack){
+	static dropGoal(holding, topStack){
 		if(topStack){
-			if(holdings.length == 1
-			&& holdings[0].suit == topStack.suit
-			&& holdings[0].number == topStack.number + 1)
+			if(holding.length == 1
+			&& holding[0].suit == topStack.suit
+			&& holding[0].number == topStack.number + 1)
 				return true
 		}
-		else if(holdings.length == 1 && holdings[0].name == "a")
+		else if(holding.length == 1 && holding[0].name == "a")
 			return true
 		return false
 	}
-	static dropCol(holdings, topStack){
+	static dropCol(holding, topStack){
 		if(topStack){
-			if(holdings[0].color != topStack.color
-			&& holdings[0].number == topStack.number - 1
+			if(holding[0].color != topStack.color
+			&& holding[0].number == topStack.number - 1
 			&& topStack.isOpen)
 				return true
 		}
-		else if(holdings[0].name == "k")
+		else if(holding[0].name == "k")
 			return true
 		return false
 	}
@@ -247,10 +237,11 @@ class Klondike
 	settingUp : boolean
 	rewinding : boolean
 	history   : {verse:[Object,Function,any],reverse:[Object,Function,any]}[]
+	holding   : Card[] = []
 	cards     : Card[]
 	stacks    : {[key: string]: Stack}
 
-	constructor(){
+	constructor(public el : HTMLElement){
 		this.settingUp = true
 
 		this.rewinding = false
@@ -260,6 +251,44 @@ class Klondike
 		this.start()
 
 		this.settingUp = false
+	}
+
+	take(card){
+		const canDrag = card.stack.canDrag(card)
+		if(!canDrag) return;
+
+		const cardsInStack = card.stack.cards
+		const cards = []
+		for(let i = cardsInStack.indexOf(card); i < cardsInStack.length; i++){
+			const card = cardsInStack[i]
+			cards.push(card)
+			card.el.classList.add("drag")
+		}
+
+		for(const key of Object.keys(card.game.stacks)){
+			if(isNaN(Number(key))) continue;
+			const stack = this.stacks[key]
+			const canDrop = stack.canDrop(cards, stack.topCard)
+			if(canDrop)
+				stack.el.classList.add("can-drop")
+		}
+
+		this.holding = cards.length!=0? cards : []
+	}
+
+	clearHolding(){
+		for(const key of Object.keys(this.stacks)){
+			if(isNaN(Number(key))) continue;
+			const stack = this.stacks[key]
+			stack.el.classList.remove("can-drop")
+		}
+
+		const cards = this.holding
+
+		for(const card of cards)
+			card.el.classList.remove("drag")
+
+		this.holding = []
 	}
 
 	addToHistory(record){
@@ -324,6 +353,11 @@ class Klondike
 			}
 		}
 
+		const rewind : HTMLElement = this.el.querySelector("#rewind")
+		rewind.onclick = ()=>{
+			this.rewind()
+		}
+
 		this.render()
 	}
 
@@ -341,5 +375,5 @@ class Klondike
 	}
 }
 
-const k = new Klondike()
+const k = new Klondike(document.getElementById("game"))
 console.log(k)

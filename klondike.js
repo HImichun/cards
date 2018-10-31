@@ -32,44 +32,21 @@ var Card = /** @class */ (function () {
         this.el.setAttribute("draggable", "true");
         this.el.ondragstart = function (e) {
             e.stopPropagation();
-            var canDrag = _this.stack.canDrag(_this);
-            if (!canDrag)
-                return;
-            var cardsInStack = _this.stack.cards;
-            var cards = [];
-            var cardIds = [];
-            for (var i = cardsInStack.indexOf(_this); i < cardsInStack.length; i++) {
-                var card = cardsInStack[i];
-                cards.push(card);
-                cardIds.push(card.id);
-                card.el.classList.add("drag");
-            }
-            for (var _i = 0, _a = Object.keys(_this.game.stacks); _i < _a.length; _i++) {
-                var key = _a[_i];
-                if (isNaN(Number(key)))
-                    continue;
-                var stack = _this.game.stacks[key];
-                var canDrop = stack.canDrop(cards, stack.topCard);
-                if (canDrop)
-                    stack.el.classList.add("can-drop");
-            }
-            e.dataTransfer.setData("text", cardIds.join(","));
+            _this.game.take(_this);
+            e.dataTransfer.setData("text", "help");
         };
-        this.el.ondragend = function (e) {
-            _this.el.classList.remove("drag");
-            for (var _i = 0, _a = Object.keys(_this.game.stacks); _i < _a.length; _i++) {
-                var key = _a[_i];
-                if (isNaN(Number(key)))
-                    continue;
-                var stack = _this.game.stacks[key];
-                stack.el.classList.remove("can-drop");
-            }
-        };
-        this.el.onmousedown = function (e) {
-            if (!_this.isOpen && e.which == 1 && _this.stack.manualOpen && _this.stack.topCard == _this) {
-                e.preventDefault();
+        this.el.ondragend = function (e) { return _this.game.clearHolding(); };
+        this.el.onclick = function (e) {
+            e.preventDefault();
+            if (!_this.isOpen && _this.stack.manualOpen && _this.stack.topCard == _this) {
                 _this.open();
                 _this.stack.render();
+                return;
+            }
+            if (_this.isOpen) {
+                e.stopPropagation();
+                if (_this.game.holding.length == 0 || !_this.stack.put(_this.game.holding))
+                    _this.game.take(_this);
             }
         };
     }
@@ -113,17 +90,26 @@ var Stack = /** @class */ (function () {
         };
         this.el.ondrop = function (e) {
             e.preventDefault();
-            var cardIds = e.dataTransfer.getData("text").split(",");
-            var cards = cardIds.map(function (id) { return _this.game.cards[id]; });
-            var canDrop = _this.canDrop(cards, _this.topCard);
-            for (var _i = 0, cards_1 = cards; _i < cards_1.length; _i++) {
-                var card = cards_1[_i];
-                card.el.classList.remove("drag");
-            }
-            if (canDrop)
-                _this.addMany(cards);
+            var cards = _this.game.holding;
+            _this.put(cards);
+        };
+        this.el.onclick = function (e) {
+            e.preventDefault();
+            if (_this.game.holding.length == 0)
+                return;
+            var cards = _this.game.holding;
+            _this.put(cards);
         };
     }
+    Stack.prototype.put = function (cards) {
+        this.game.clearHolding();
+        var canDrop = this.canDrop(cards, this.topCard);
+        if (canDrop) {
+            this.addMany(cards);
+            return true;
+        }
+        return false;
+    };
     Stack.prototype.setDragDrop = function () {
         var canDragAttr = this.el.getAttribute("can-drag");
         if (canDragAttr === "true")
@@ -162,8 +148,8 @@ var Stack = /** @class */ (function () {
             this.render();
     };
     Stack.prototype.addMany = function (cards) {
-        for (var _i = 0, cards_2 = cards; _i < cards_2.length; _i++) {
-            var card = cards_2[_i];
+        for (var _i = 0, cards_1 = cards; _i < cards_1.length; _i++) {
+            var card = cards_1[_i];
             this.add(card, true);
         }
         this.render();
@@ -197,32 +183,34 @@ var Stack = /** @class */ (function () {
     Stack.dragCol = function (card) {
         return card.isOpen;
     };
-    Stack.dropGoal = function (holdings, topStack) {
+    Stack.dropGoal = function (holding, topStack) {
         if (topStack) {
-            if (holdings.length == 1
-                && holdings[0].suit == topStack.suit
-                && holdings[0].number == topStack.number + 1)
+            if (holding.length == 1
+                && holding[0].suit == topStack.suit
+                && holding[0].number == topStack.number + 1)
                 return true;
         }
-        else if (holdings.length == 1 && holdings[0].name == "a")
+        else if (holding.length == 1 && holding[0].name == "a")
             return true;
         return false;
     };
-    Stack.dropCol = function (holdings, topStack) {
+    Stack.dropCol = function (holding, topStack) {
         if (topStack) {
-            if (holdings[0].color != topStack.color
-                && holdings[0].number == topStack.number - 1
+            if (holding[0].color != topStack.color
+                && holding[0].number == topStack.number - 1
                 && topStack.isOpen)
                 return true;
         }
-        else if (holdings[0].name == "k")
+        else if (holding[0].name == "k")
             return true;
         return false;
     };
     return Stack;
 }());
 var Klondike = /** @class */ (function () {
-    function Klondike() {
+    function Klondike(el) {
+        this.el = el;
+        this.holding = [];
         this.settingUp = true;
         this.rewinding = false;
         this.history = [];
@@ -231,6 +219,43 @@ var Klondike = /** @class */ (function () {
         this.start();
         this.settingUp = false;
     }
+    Klondike.prototype.take = function (card) {
+        var canDrag = card.stack.canDrag(card);
+        if (!canDrag)
+            return;
+        var cardsInStack = card.stack.cards;
+        var cards = [];
+        for (var i = cardsInStack.indexOf(card); i < cardsInStack.length; i++) {
+            var card_1 = cardsInStack[i];
+            cards.push(card_1);
+            card_1.el.classList.add("drag");
+        }
+        for (var _i = 0, _a = Object.keys(card.game.stacks); _i < _a.length; _i++) {
+            var key = _a[_i];
+            if (isNaN(Number(key)))
+                continue;
+            var stack = this.stacks[key];
+            var canDrop = stack.canDrop(cards, stack.topCard);
+            if (canDrop)
+                stack.el.classList.add("can-drop");
+        }
+        this.holding = cards.length != 0 ? cards : [];
+    };
+    Klondike.prototype.clearHolding = function () {
+        for (var _i = 0, _a = Object.keys(this.stacks); _i < _a.length; _i++) {
+            var key = _a[_i];
+            if (isNaN(Number(key)))
+                continue;
+            var stack = this.stacks[key];
+            stack.el.classList.remove("can-drop");
+        }
+        var cards = this.holding;
+        for (var _b = 0, cards_2 = cards; _b < cards_2.length; _b++) {
+            var card = cards_2[_b];
+            card.el.classList.remove("drag");
+        }
+        this.holding = [];
+    };
     Klondike.prototype.addToHistory = function (record) {
         if (!this.rewinding && !this.settingUp)
             this.history.push(record);
@@ -287,6 +312,9 @@ var Klondike = /** @class */ (function () {
                 deck.render();
             }
         };
+        this.el.querySelector("#rewind").onclick = function () {
+            _this.rewind();
+        };
         this.render();
     };
     Klondike.prototype.render = function () {
@@ -303,5 +331,5 @@ var Klondike = /** @class */ (function () {
     };
     return Klondike;
 }());
-var k = new Klondike();
+var k = new Klondike(document.getElementById("game"));
 console.log(k);
